@@ -3,7 +3,6 @@ class User {
   final String name;
   final String email;
   final String deviceName;
-  final String avatarUrl;
   final String websiteUrl;
 
   const User({
@@ -11,7 +10,6 @@ class User {
     required this.name,
     required this.email,
     required this.deviceName,
-    required this.avatarUrl,
     required this.websiteUrl,
   });
 }

@@ -28,8 +28,14 @@ class UserCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 30,
-                backgroundImage: NetworkImage(user.avatarUrl),
-                backgroundColor: Colors.grey[200],
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  user.name.substring(0, 1).toUpperCase(),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
