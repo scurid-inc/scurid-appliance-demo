@@ -1,16 +1,57 @@
-# scuridappliancedemo
+# Scurid Appliance Demo
 
-Demo application for using the Scurid Appliance
+Demo application for using the Scurid Appliance.
+
+## Description
+
+This Flutter application demonstrates how to integrate and use the Scurid Appliance for secure identity and data management.
+
+## Supported Platforms
+
+- macOS
+- Linux
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter SDK (stable channel)
+- macOS development environment (for macOS builds)
+- Linux development environment (for Linux builds)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+
+### Running the App
+
+For macOS:
+```bash
+flutter run -d macos
+```
+
+For Linux:
+```bash
+flutter run -d linux
+```
+
+## Features
+
+- WebView integration for desktop platforms
+- Material Design UI
+- Cross-platform support (macOS & Linux)
+
+## Development
+
+This project uses:
+- Flutter stable channel
+- Material Design components
+- WebView plugins for desktop platforms
+
+## License
+
+Proprietary - Scurid Inc.
