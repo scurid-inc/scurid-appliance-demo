@@ -25,7 +25,22 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Scurid Appliance Demo'),
+        title: Text(
+          'SCURID APPLIANCE',
+          style: TextStyle(
+            fontSize: 56,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 4.0,
+            fontFamily: 'monospace',
+            shadows: [
+              Shadow(
+                offset: Offset(2, 2),
+                blurRadius: 4,
+                color: Colors.black26,
+              ),
+            ],
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
       ),
