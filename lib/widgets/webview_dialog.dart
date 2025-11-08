@@ -31,7 +31,7 @@ class _WebViewDialogState extends State<WebViewDialog> {
 
   // Whitelisted domains
   static const List<String> _allowedDomains = [
-    'google.com',
+    // 'google.com',
     'yahoo.com',
     'bing.com',
     'wikipedia.org',

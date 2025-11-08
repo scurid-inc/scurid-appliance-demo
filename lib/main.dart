@@ -3,11 +3,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_linux_webview/flutter_linux_webview.dart';
+import 'package:window_manager/window_manager.dart';
 import 'data/mock_users.dart';
 import 'pages/home_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize window manager for desktop platforms
+  if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.linux ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.windows)) {
+    await windowManager.ensureInitialized();
+
+    const windowOptions = WindowOptions(
+      fullScreen: true,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.hidden,
+    );
+
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+      await windowManager.setFullScreen(true);
+    });
+  }
 
   // Initialize Android WebView debugging
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
