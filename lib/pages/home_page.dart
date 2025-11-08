@@ -26,19 +26,12 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'SCURID APPLIANCE',
+          'SCURID APPLIANCE DEMO',
           style: TextStyle(
             fontSize: 56,
             fontWeight: FontWeight.w900,
             letterSpacing: 4.0,
             fontFamily: 'monospace',
-            shadows: [
-              Shadow(
-                offset: Offset(2, 2),
-                blurRadius: 4,
-                color: Colors.black26,
-              ),
-            ],
           ),
         ),
         centerTitle: true,

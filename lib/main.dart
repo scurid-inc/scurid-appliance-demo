@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_linux_webview/flutter_linux_webview.dart';
 import 'package:window_manager/window_manager.dart';
@@ -101,7 +100,7 @@ class _ScuridApplianceDemoState extends State<ScuridApplianceDemo> with WindowLi
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.brown,
+          seedColor: Color(0xFF1565C0),
           brightness: Brightness.light,
         ),
         useMaterial3: true,
