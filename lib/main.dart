@@ -20,20 +20,15 @@ Future<void> main() async {
       fullScreen: true,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
+      windowButtonVisibility: false,
     );
 
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.setFullScreen(true);
       await windowManager.show();
       await windowManager.focus();
-      await windowManager.setFullScreen(true);
     });
   }
-
-  // Initialize Android WebView debugging
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    await InAppWebViewController.setWebContentsDebuggingEnabled(kDebugMode);
-  }
-
   // Initialize Linux WebView
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.linux) {
     LinuxWebViewPlugin.initialize(options: <String, String?>{
@@ -41,16 +36,63 @@ Future<void> main() async {
       'remote-debugging-port': '8888',
       'autoplay-policy': 'no-user-gesture-required',
     });
-
-    // Configure WebView to use the LinuxWebView.
     WebView.platform = LinuxWebView();
   }
 
   runApp(const ScuridApplianceDemo());
 }
 
-class ScuridApplianceDemo extends StatelessWidget {
+class ScuridApplianceDemo extends StatefulWidget {
   const ScuridApplianceDemo({super.key});
+
+  @override
+  State<ScuridApplianceDemo> createState() => _ScuridApplianceDemoState();
+}
+
+class _ScuridApplianceDemoState extends State<ScuridApplianceDemo> with WindowListener {
+  @override
+  void initState() {
+    super.initState();
+    windowManager.addListener(this);
+    _enforceFullScreen();
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  Future<void> _enforceFullScreen() async {
+    if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.windows)) {
+      await windowManager.setFullScreen(true);
+      await windowManager.setPreventClose(true);
+    }
+  }
+
+  @override
+  void onWindowEvent(String eventName) {
+    if (eventName == 'minimize' || eventName == 'restore') {
+      _enforceFullScreen();
+    }
+  }
+
+  @override
+  void onWindowMinimize() {
+    _enforceFullScreen();
+  }
+
+  @override
+  void onWindowRestore() {
+    _enforceFullScreen();
+  }
+
+  @override
+  void onWindowFocus() {
+    _enforceFullScreen();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +101,7 @@ class ScuridApplianceDemo extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
+          seedColor: Colors.brown,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
