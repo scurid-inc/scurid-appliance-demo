@@ -1,5 +1,8 @@
+import 'dart:collection';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewDialog extends StatefulWidget {
   final String url;
@@ -16,8 +19,23 @@ class WebViewDialog extends StatefulWidget {
 }
 
 class _WebViewDialogState extends State<WebViewDialog> {
+  // For InAppWebView (macOS)
+  InAppWebViewController? inAppWebViewController;
+  final GlobalKey inAppWebViewKey = GlobalKey();
+
+  // For webview_flutter (Linux)
+  WebViewController? webViewController;
+
   bool isLoading = true;
   double progress = 0;
+
+  @override
+  void dispose() {
+    // Clean up controllers
+    inAppWebViewController = null;
+    webViewController = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,26 +83,9 @@ class _WebViewDialogState extends State<WebViewDialog> {
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                child: InAppWebView(
-                  initialUrlRequest: URLRequest(
-                    url: WebUri(widget.url),
-                  ),
-                  initialSettings: InAppWebViewSettings(
-                    javaScriptEnabled: true,
-                    useShouldOverrideUrlLoading: true,
-                  ),
-                  onLoadStart: (controller, url) {
-                    setState(() => isLoading = true);
-                  },
-                  onLoadStop: (controller, url) {
-                    setState(() => isLoading = false);
-                  },
-                  onProgressChanged: (controller, progress) {
-                    setState(() {
-                      this.progress = progress / 100;
-                    });
-                  },
-                ),
+                child: !kIsWeb && defaultTargetPlatform == TargetPlatform.linux
+                    ? _buildLinuxWebView()
+                    : _buildInAppWebView(),
               ),
             ),
           ],
@@ -92,5 +93,62 @@ class _WebViewDialogState extends State<WebViewDialog> {
       ),
     );
   }
+
+  Widget _buildLinuxWebView() {
+    return WebView(
+      initialUrl: widget.url,
+      javascriptMode: JavascriptMode.unrestricted,
+      onWebViewCreated: (WebViewController controller) {
+        webViewController = controller;
+      },
+      onProgress: (int progressValue) {
+        final progressDouble = progressValue / 100.0;
+        setState(() {
+          progress = progressDouble;
+          isLoading = progressDouble < 1.0;
+        });
+      },
+      onPageStarted: (String url) {
+        setState(() => isLoading = true);
+      },
+      onPageFinished: (String url) {
+        setState(() => isLoading = false);
+      },
+    );
+  }
+
+  Widget _buildInAppWebView() {
+    final settings = InAppWebViewSettings(
+      isInspectable: kDebugMode,
+      mediaPlaybackRequiresUserGesture: false,
+      allowsInlineMediaPlayback: true,
+      iframeAllowFullscreen: true,
+      javaScriptEnabled: true,
+    );
+
+    return InAppWebView(
+      key: inAppWebViewKey,
+      initialUrlRequest: URLRequest(url: WebUri(widget.url)),
+      initialUserScripts: UnmodifiableListView<UserScript>([]),
+      initialSettings: settings,
+      onWebViewCreated: (controller) {
+        inAppWebViewController = controller;
+      },
+      onLoadStart: (controller, url) {
+        setState(() => isLoading = true);
+      },
+      onLoadStop: (controller, url) {
+        setState(() => isLoading = false);
+      },
+      onProgressChanged: (controller, progressValue) {
+        final progressDouble = progressValue / 100.0;
+        setState(() {
+          progress = progressDouble;
+          isLoading = progressDouble < 1.0;
+        });
+      },
+    );
+  }
 }
+
 
