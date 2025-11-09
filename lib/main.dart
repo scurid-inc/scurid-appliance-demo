@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_linux_webview/flutter_linux_webview.dart';
 import 'package:window_manager/window_manager.dart';
-import 'data/mock_users.dart';
 import 'pages/home_page.dart';
 
 Future<void> main() async {
@@ -105,7 +104,7 @@ class _ScuridApplianceDemoState extends State<ScuridApplianceDemo> with WindowLi
         ),
         useMaterial3: true,
       ),
-      home: HomePage(users: mockUsers),
+      home: HomePage(),
     );
   }
 }
