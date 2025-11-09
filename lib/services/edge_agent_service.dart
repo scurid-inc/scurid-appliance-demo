@@ -32,6 +32,14 @@ class EdgeAgentService {
         sessionId: user.sessionID,
         deviceName: _extractDeviceName(user.sessionID),
       )).toList();
+    } on GrpcError catch (e) {
+      // Handle specific gRPC error: empty device users list
+      if (e.code == 2 && e.message?.contains('agentDeviceUsers is empty') == true) {
+        // Return empty list instead of throwing error
+        return [];
+      }
+      print('Error fetching device users: $e');
+      rethrow;
     } catch (e) {
       print('Error fetching device users: $e');
       rethrow;

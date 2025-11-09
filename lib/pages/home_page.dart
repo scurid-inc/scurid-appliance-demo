@@ -23,6 +23,53 @@ class _HomePageState extends State<HomePage> {
     _loadUsers();
   }
 
+  String _parseErrorMessage(dynamic error) {
+    final errorString = error.toString();
+    
+    // Check for empty device users (this is actually a valid state, not an error)
+    if (errorString.contains('agentDeviceUsers is empty')) {
+      return 'No device users available.\n\n'
+             'No users are currently logged into any devices.';
+    }
+    
+    // Check for gRPC UNAVAILABLE error
+    if (errorString.contains('code: 14') || 
+        errorString.contains('UNAVAILABLE') ||
+        errorString.contains('Connection refused')) {
+      return 'Unable to connect to Scurid Edge Agent.\n\n'
+             'Please ensure the edge agent is running on localhost:4040';
+    }
+    
+    // Check for gRPC UNKNOWN error
+    if (errorString.contains('code: 2') || errorString.contains('UNKNOWN')) {
+      return 'Edge agent returned an error.\n\n'
+             'Please check the edge agent logs for details.';
+    }
+    
+    // Check for gRPC UNAUTHENTICATED error
+    if (errorString.contains('code: 16') || errorString.contains('UNAUTHENTICATED')) {
+      return 'Authentication failed.\n\nPlease check your credentials.';
+    }
+    
+    // Check for gRPC PERMISSION_DENIED error
+    if (errorString.contains('code: 7') || errorString.contains('PERMISSION_DENIED')) {
+      return 'Access denied.\n\nYou do not have permission to access this resource.';
+    }
+    
+    // Check for gRPC DEADLINE_EXCEEDED error
+    if (errorString.contains('code: 4') || errorString.contains('DEADLINE_EXCEEDED')) {
+      return 'Request timed out.\n\nThe edge agent took too long to respond.';
+    }
+    
+    // Check for network errors
+    if (errorString.contains('SocketException') || errorString.contains('Network')) {
+      return 'Network error occurred.\n\nPlease check your connection.';
+    }
+    
+    // Default error message
+    return 'An unexpected error occurred.\n\nPlease try again later.';
+  }
+
   Future<void> _loadUsers() async {
     try {
       setState(() {
@@ -47,8 +94,9 @@ class _HomePageState extends State<HomePage> {
         _isLoading = false;
       });
     } catch (e) {
+      print('Error fetching device users: $e');
       setState(() {
-        _error = 'Failed to load users: $e';
+        _error = _parseErrorMessage(e);
         _isLoading = false;
       });
     }
@@ -106,29 +154,83 @@ class _HomePageState extends State<HomePage> {
             else if (_error != null)
               Expanded(
                 child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+                  child: Card(
+                    elevation: 4,
+                    margin: EdgeInsets.all(32),
+                    child: Padding(
+                      padding: EdgeInsets.all(48),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 80,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Connection Error',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _error!,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+                          ElevatedButton.icon(
+                            onPressed: _loadUsers,
+                            icon: Icon(Icons.refresh),
+                            label: const Text('Retry Connection'),
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 16,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadUsers,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               )
             else if (_users.isEmpty)
-              const Expanded(
+              Expanded(
                 child: Center(
-                  child: Text('No users found'),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        size: 80,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'No Users Found',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No device users are currently available.',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      ElevatedButton.icon(
+                        onPressed: _loadUsers,
+                        icon: Icon(Icons.refresh),
+                        label: const Text('Refresh'),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else
