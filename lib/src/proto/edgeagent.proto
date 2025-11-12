@@ -56,6 +56,10 @@ service ScuridEdgeAgentAPI {
   // number of files to download will depend on files prepared by the admin on Scurid Platform App
   rpc DownloadFiles(DownloadFilesReq) returns (DownloadFilesRes) {};
 
+  // Used for uploading one or more files
+  // number of files to upload will depend on files prepared by the admin on Scurid Platform App
+  rpc UploadFiles(UploadFilesReq) returns (UploadFilesRes) {};
+
   // invokes send data services within the Agent to send to the Scurid backend Server
   rpc SendDeviceData(SendDeviceDataReq) returns (SendDeviceDataRes){};
 
@@ -70,6 +74,14 @@ service ScuridEdgeAgentAPI {
   // GetDeviceUsers returns the list of users who have access to the device
   // this is the list of users who have enrolled with biometrics and have received access rights from the administrator
   rpc GetDeviceUsers (GetDeviceUsersReq) returns (GetDeviceUsersRes) {};
+
+
+  // CreateDeviceIdentityWithAdditionalCrypto is an extended version of CreateDeviceIdentity
+  // allows to create an identity with additional crypto artefacts
+  rpc CreateDeviceIdentityWithAdditionalCrypto (CreateDeviceIdentityWithAdditionalCryptoReq) returns (CreateDeviceIdentityWithAdditionalCryptoRes) {
+  };
+
+  rpc IsAuthorised(IsAuthorisedReq) returns (IsAuthorisedRes){};
 }
 
 message GetDeviceUsersReq {
@@ -92,16 +104,15 @@ message Empty{
 
 message BiometricAuthReq {
   string id = 1; // maps to the session id
-  string email = 2;
-  string agentDID = 3;
 }
 
 message BiometricAuthRes {
-  bool result = 1;
+  string verificationURL = 1;
 }
 message SendDeviceDataWithCustomFieldsReq {
-  string agentDID = 1;
-  repeated string data = 2; // array of JSON formatted data
+  string agentDID = 1; // this is the agent's / device identity
+  repeated string data = 2; // array of JSON formatted data, use this for non InfluxDB data
+  optional InfluxData influxData = 3; // Contains tags and fields for InfluxDB
 }
 
 message SendDeviceDataWithCustomFieldsRes {
@@ -199,10 +210,20 @@ message RegisterDeviceIdentityRes{
   bool result = 1; // simply a confirmation if request has been received or not
 }
 
+message ArtifactHash {
+  string fileName = 1;
+  string fileHash = 2;
+}
+
 // request structure to be sent
 message DownloadFilesReq {
   string identity = 1; // device's public identity
   string path = 2; // where ever user wants to store the files
+  bool autoCreateDir = 3; // automatically create storage dir
+  bool enableStaging = 4; // stage files for download
+  repeated ArtifactHash artifactHashOnAgent = 5; // list of files and their corresponding hashes on the agent
+  repeated ArtifactHash artifactHashOnServer = 6; // list of files and their corresponding hashes on the server
+  map<string, int64> offset = 7; // bytes upto which the file has been downloaded; a dictionary of filename and offset value
 }
 // true if all files are downloaded, else false - check error for details
 message DownloadFilesRes {
@@ -217,3 +238,69 @@ message SendDeviceDataReq {
 message SendDeviceDataRes {
   bool result = 1; // True/False, confirms if the data has been sent successfully, check for error if false
 }
+
+message UploadFilesReq {
+  oneof data{
+    FileInfo info = 1;
+    bytes chunkData = 2;
+  }
+}
+
+message FileInfo {
+  string deviceIdentity = 1;
+  string fileId = 2;
+  string fileType = 3;
+}
+
+
+message UploadFilesRes {
+  bool result = 1; // true if successfully transferred the files.
+}
+message InfluxData {
+  map<string, string> tags = 1;       // Tags as key-value pairs (string keys and values)
+  map<string, Value> fields = 2;      // Fields with various data types; values that will be signed by the identity
+}
+
+message Value {
+  oneof value {
+    int64 int_value = 1;
+    double double_value = 2;
+    string string_value = 3;
+    bool bool_value = 4;
+  }
+}
+
+message CreateDeviceIdentityWithAdditionalCryptoReq {
+  // left blank intentionally
+}
+
+message CreateDeviceIdentityWithAdditionalCryptoRes {
+  string did = 1;
+  ECDSAPubKey512 ECDSA512_pub_key = 2;
+  AES128Key AES128_key = 3;
+}
+
+// ECDSAPubKey512 is used to store the 512 bit ECDSA public key
+// Generate ECDSA-256 (P-512) Key Pair
+message ECDSAPubKey512 {
+  bytes pubX = 2;
+  bytes pubY = 3;
+}
+
+// AES128Key is used to store return the 128 bit AES key
+// returns both the key in bytes and string format
+message AES128Key {
+  bytes keyBits = 1;
+  string keyBitsString = 2;
+}
+
+// IsAuthorisedReq is the req to check if user is authorised or not
+message IsAuthorisedReq{
+  string sessionID = 1; // sessionID of the user
+}
+
+// IsAuthorisedRes is the response of the authorisation operation
+message IsAuthorisedRes{
+  bool status = 1;  // true if authz is successful else false
+}
+

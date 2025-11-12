@@ -31,12 +31,7 @@ class _WebViewDialogState extends State<WebViewDialog> {
 
   // Whitelisted domains
   static const List<String> _allowedDomains = [
-    // 'google.com',
-    'yahoo.com',
-    'bing.com',
-    'wikipedia.org',
-    'reddit.com',
-    'amazon.com',
+    'truststamp.net',
   ];
 
   @override
@@ -51,6 +46,11 @@ class _WebViewDialogState extends State<WebViewDialog> {
   bool _isUrlAllowed(String url) {
     try {
       final uri = Uri.parse(url);
+      
+      // Allow about:blank (used by web pages for popups/iframes)
+      if (url == 'about:blank') {
+        return true;
+      }
       
       // Block dangerous schemes
       if (['file', 'javascript', 'data'].contains(uri.scheme)) {
@@ -191,7 +191,15 @@ class _WebViewDialogState extends State<WebViewDialog> {
       allowsInlineMediaPlayback: true,
       iframeAllowFullscreen: true,
       javaScriptEnabled: true,
+      javaScriptCanOpenWindowsAutomatically: true,
+      supportZoom: false,
+      useOnDownloadStart: true,
       userAgent: 'ScuridApplianceDemo/1.0 (macOS)',
+      transparentBackground: false,
+      disableVerticalScroll: false,
+      disableHorizontalScroll: false,
+      allowsAirPlayForMediaPlayback: true,
+      allowsPictureInPictureMediaPlayback: true,
     );
 
     return InAppWebView(
@@ -205,8 +213,22 @@ class _WebViewDialogState extends State<WebViewDialog> {
       onLoadStart: (controller, url) {
         setState(() => isLoading = true);
       },
-      onLoadStop: (controller, url) {
+      onLoadStop: (controller, url) async {
         setState(() => isLoading = false);
+        
+        // Inject JavaScript to detect verification completion
+        await controller.evaluateJavascript(source: """
+          (function() {
+            var checkInterval = setInterval(function() {
+              var bodyText = document.body.innerText || document.body.textContent;
+              if (bodyText.includes('Verification Complete') || 
+                  bodyText.includes('verification complete')) {
+                window.flutter_inappwebview.callHandler('verificationComplete');
+                clearInterval(checkInterval);
+              }
+            }, 500);
+          })();
+        """);
       },
       onProgressChanged: (controller, progressValue) {
         final progressDouble = progressValue / 100.0;
@@ -214,6 +236,12 @@ class _WebViewDialogState extends State<WebViewDialog> {
           progress = progressDouble;
           isLoading = progressDouble < 1.0;
         });
+      },
+      onPermissionRequest: (controller, request) async {
+        return PermissionResponse(
+          resources: request.resources,
+          action: PermissionResponseAction.GRANT,
+        );
       },
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         final url = navigationAction.request.url;

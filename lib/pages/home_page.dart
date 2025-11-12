@@ -1,8 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/edge_agent_service.dart';
 import '../widgets/user_card.dart';
 import '../widgets/webview_dialog.dart';
+import 'success_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,47 +28,45 @@ class _HomePageState extends State<HomePage> {
 
   String _parseErrorMessage(dynamic error) {
     final errorString = error.toString();
-    
-    // Check for empty device users (this is actually a valid state, not an error)
-    if (errorString.contains('agentDeviceUsers is empty')) {
-      return 'No device users available.\n\n'
-             'No users are currently logged into any devices.';
-    }
-    
+
     // Check for gRPC UNAVAILABLE error
-    if (errorString.contains('code: 14') || 
+    if (errorString.contains('code: 14') ||
         errorString.contains('UNAVAILABLE') ||
         errorString.contains('Connection refused')) {
       return 'Unable to connect to Scurid Edge Agent.\n\n'
-             'Please ensure the edge agent is running on localhost:4040';
+          'Please ensure the edge agent is running on localhost:4040';
     }
-    
+
     // Check for gRPC UNKNOWN error
     if (errorString.contains('code: 2') || errorString.contains('UNKNOWN')) {
       return 'Edge agent returned an error.\n\n'
-             'Please check the edge agent logs for details.';
+          'Please check the edge agent logs for details.';
     }
-    
+
     // Check for gRPC UNAUTHENTICATED error
-    if (errorString.contains('code: 16') || errorString.contains('UNAUTHENTICATED')) {
+    if (errorString.contains('code: 16') ||
+        errorString.contains('UNAUTHENTICATED')) {
       return 'Authentication failed.\n\nPlease check your credentials.';
     }
-    
+
     // Check for gRPC PERMISSION_DENIED error
-    if (errorString.contains('code: 7') || errorString.contains('PERMISSION_DENIED')) {
+    if (errorString.contains('code: 7') ||
+        errorString.contains('PERMISSION_DENIED')) {
       return 'Access denied.\n\nYou do not have permission to access this resource.';
     }
-    
+
     // Check for gRPC DEADLINE_EXCEEDED error
-    if (errorString.contains('code: 4') || errorString.contains('DEADLINE_EXCEEDED')) {
+    if (errorString.contains('code: 4') ||
+        errorString.contains('DEADLINE_EXCEEDED')) {
       return 'Request timed out.\n\nThe edge agent took too long to respond.';
     }
-    
+
     // Check for network errors
-    if (errorString.contains('SocketException') || errorString.contains('Network')) {
+    if (errorString.contains('SocketException') ||
+        errorString.contains('Network')) {
       return 'Network error occurred.\n\nPlease check your connection.';
     }
-    
+
     // Default error message
     return 'An unexpected error occurred.\n\nPlease try again later.';
   }
@@ -78,23 +79,15 @@ class _HomePageState extends State<HomePage> {
       });
 
       final deviceUsers = await _edgeAgentService.getDeviceUsers();
-      
+
       setState(() {
         _users = deviceUsers.asMap().entries.map((entry) {
-          final index = entry.key;
           final deviceUser = entry.value;
-          return User(
-            id: deviceUser.sessionId,
-            name: deviceUser.email.split('@')[0], // Use part before @
-            email: deviceUser.email,
-            deviceName: deviceUser.deviceName,
-            websiteUrl: 'https://www.google.com', // Default URL
-          );
+          return User(sessionId: deviceUser.sessionId, email: deviceUser.email);
         }).toList();
         _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching device users: $e');
       setState(() {
         _error = _parseErrorMessage(e);
         _isLoading = false;
@@ -108,12 +101,160 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _openWebView(BuildContext context, User user) {
+  Future<void> _openWebView(BuildContext context, User user) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Initiating biometric authentication...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Call BiometricAuth API to get verification URL
+      final verificationUrl = await _edgeAgentService.biometricAuth(
+        user.sessionId,
+      );
+
+      // Close loading dialog
+      if (context.mounted) Navigator.pop(context);
+
+      // Open webview with the verification URL
+      if (context.mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => WebViewDialog(
+            url: verificationUrl,
+            title: 'Biometric Authentication - ${user.email}',
+          ),
+        );
+
+        // After webview closes, check authorization
+        if (context.mounted) {
+          await _checkAuthorization(context, user);
+        }
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (context.mounted) Navigator.pop(context);
+
+      // Show error dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Authentication Error'),
+            content: Text(
+              'Failed to initiate biometric authentication:\n\n${_parseErrorMessage(e)}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _checkAuthorization(BuildContext context, User user) async {
+    // Show progress indicator
     showDialog(
       context: context,
-      builder: (context) =>
-          WebViewDialog(url: user.websiteUrl, title: user.name),
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Verifying authorization...'),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
+
+    try {
+      // Call IsAuthorised API
+      final isAuthorized = await _edgeAgentService.isAuthorised(user.sessionId);
+
+      log('Authorization result for user ${user.email}: $isAuthorized');
+
+      // Close progress indicator
+      if (context.mounted) Navigator.pop(context);
+
+      if (isAuthorized) {
+        // Navigate to success page
+        if (context.mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SuccessPage(email: user.email),
+            ),
+          );
+        }
+      } else {
+        // Show failure message but stay on main page
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Authorization Failed'),
+              content: const Text(
+                'The biometric authentication was not successful. Please try again.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Close progress indicator
+      if (context.mounted) Navigator.pop(context);
+
+      // Show error dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Verification Error'),
+            content: Text(
+              'Failed to verify authorization:\n\n${_parseErrorMessage(e)}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -146,11 +287,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             const SizedBox(height: 24),
             if (_isLoading)
-              const Expanded(
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
+              const Expanded(child: Center(child: CircularProgressIndicator()))
             else if (_error != null)
               Expanded(
                 child: Center(
@@ -170,9 +307,8 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 24),
                           Text(
                             'Connection Error',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -204,24 +340,19 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
+                      Icon(Icons.people_outline, size: 80, color: Colors.grey),
                       const SizedBox(height: 24),
                       Text(
                         'No Users Found',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       Text(
                         'No device users are currently available.',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton.icon(

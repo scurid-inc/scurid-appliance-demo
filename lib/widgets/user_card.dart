@@ -30,7 +30,7 @@ class UserCard extends StatelessWidget {
                 radius: 30,
                 backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 child: Text(
-                  user.name.substring(0, 1).toUpperCase(),
+                  user.email.substring(0, 1).toUpperCase(),
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.bold,
@@ -43,14 +43,14 @@ class UserCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.name,
+                      user.email,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      user.email,
+                      'Session: ${user.sessionId}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.grey[600],
                           ),

@@ -55,6 +55,32 @@ class EdgeAgentService {
     return 'Device $sessionId';
   }
 
+  Future<String> biometricAuth(String sessionId) async {
+    try {
+      final request = BiometricAuthReq()
+        ..id = sessionId;
+      
+      final response = await _client.biometricAuth(request);
+      return response.verificationURL;
+    } catch (e) {
+      print('Error in biometric auth: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> isAuthorised(String sessionId) async {
+    try {
+      final request = IsAuthorisedReq()
+        ..sessionID = sessionId;
+      
+      final response = await _client.isAuthorised(request);
+      return response.status;
+    } catch (e) {
+      print('Error checking authorization: $e');
+      rethrow;
+    }
+  }
+
   Future<void> dispose() async {
     await _channel.shutdown();
   }
