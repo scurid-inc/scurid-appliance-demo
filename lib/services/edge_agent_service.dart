@@ -30,7 +30,6 @@ class EdgeAgentService {
       return response.deviceUsers.map((user) => DeviceUser(
         email: user.email,
         sessionId: user.sessionID,
-        deviceName: _extractDeviceName(user.sessionID),
       )).toList();
     } on GrpcError catch (e) {
       // Handle specific gRPC error: empty device users list
@@ -44,15 +43,6 @@ class EdgeAgentService {
       print('Error fetching device users: $e');
       rethrow;
     }
-  }
-
-  String _extractDeviceName(String sessionId) {
-    // Extract a readable device name from sessionID if possible
-    // For now, just use a generic name with truncated session ID
-    if (sessionId.length > 8) {
-      return 'Device ${sessionId.substring(0, 8)}';
-    }
-    return 'Device $sessionId';
   }
 
   Future<String> biometricAuth(String sessionId) async {
@@ -89,11 +79,9 @@ class EdgeAgentService {
 class DeviceUser {
   final String email;
   final String sessionId;
-  final String deviceName;
 
   DeviceUser({
     required this.email,
     required this.sessionId,
-    required this.deviceName,
   });
 }

@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/edge_agent_service.dart';
@@ -81,10 +79,10 @@ class _HomePageState extends State<HomePage> {
       final deviceUsers = await _edgeAgentService.getDeviceUsers();
 
       setState(() {
-        _users = deviceUsers.asMap().entries.map((entry) {
-          final deviceUser = entry.value;
-          return User(sessionId: deviceUser.sessionId, email: deviceUser.email);
-        }).toList();
+        _users = deviceUsers.map((deviceUser) => User(
+          sessionId: deviceUser.sessionId,
+          email: deviceUser.email,
+        )).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -197,8 +195,6 @@ class _HomePageState extends State<HomePage> {
     try {
       // Call IsAuthorised API
       final isAuthorized = await _edgeAgentService.isAuthorised(user.sessionId);
-
-      log('Authorization result for user ${user.email}: $isAuthorized');
 
       // Close progress indicator
       if (context.mounted) Navigator.pop(context);
