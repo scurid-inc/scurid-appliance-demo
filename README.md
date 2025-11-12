@@ -54,4 +54,4 @@ This project uses:
 
 ## License
 
-Proprietary - Scurid Inc.
+MIT License - see [LICENSE](LICENSE) file for details.
