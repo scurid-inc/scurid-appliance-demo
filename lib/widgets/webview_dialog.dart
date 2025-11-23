@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+
 
 class WebViewDialog extends StatefulWidget {
   final String url;
@@ -23,8 +23,7 @@ class _WebViewDialogState extends State<WebViewDialog> {
   InAppWebViewController? inAppWebViewController;
   final GlobalKey inAppWebViewKey = GlobalKey();
 
-  // For webview_flutter (Linux)
-  WebViewController? webViewController;
+
 
   bool isLoading = true;
   double progress = 0;
@@ -38,7 +37,6 @@ class _WebViewDialogState extends State<WebViewDialog> {
   void dispose() {
     // Clean up controllers
     inAppWebViewController = null;
-    webViewController = null;
     super.dispose();
   }
 
@@ -46,20 +44,20 @@ class _WebViewDialogState extends State<WebViewDialog> {
   bool _isUrlAllowed(String url) {
     try {
       final uri = Uri.parse(url);
-      
+
       // Allow about:blank (used by web pages for popups/iframes)
       if (url == 'about:blank') {
         return true;
       }
-      
+
       // Block dangerous schemes
       if (['file', 'javascript', 'data'].contains(uri.scheme)) {
         return false;
       }
-      
+
       // Check if domain is whitelisted
-      return _allowedDomains.any((domain) => 
-        uri.host == domain || 
+      return _allowedDomains.any((domain) =>
+        uri.host == domain ||
         uri.host == 'www.$domain' ||
         uri.host.endsWith('.$domain')
       );
@@ -142,9 +140,7 @@ class _WebViewDialogState extends State<WebViewDialog> {
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                child: !kIsWeb && defaultTargetPlatform == TargetPlatform.linux
-                    ? _buildLinuxWebView()
-                    : _buildInAppWebView(),
+                child: _buildInAppWebView(),
               ),
             ),
           ],
@@ -153,36 +149,7 @@ class _WebViewDialogState extends State<WebViewDialog> {
     );
   }
 
-  Widget _buildLinuxWebView() {
-    return WebView(
-      initialUrl: widget.url,
-      javascriptMode: JavascriptMode.unrestricted,
-      onWebViewCreated: (WebViewController controller) {
-        webViewController = controller;
-      },
-      onProgress: (int progressValue) {
-        final progressDouble = progressValue / 100.0;
-        setState(() {
-          progress = progressDouble;
-          isLoading = progressDouble < 1.0;
-        });
-      },
-      onPageStarted: (String url) {
-        setState(() => isLoading = true);
-      },
-      onPageFinished: (String url) {
-        setState(() => isLoading = false);
-      },
-      navigationDelegate: (NavigationRequest request) {
-        // Check if URL is allowed
-        if (!_isUrlAllowed(request.url)) {
-          _showBlockedUrlDialog(request.url);
-          return NavigationDecision.prevent;
-        }
-        return NavigationDecision.navigate;
-      },
-    );
-  }
+
 
   Widget _buildInAppWebView() {
     final settings = InAppWebViewSettings(
@@ -215,13 +182,13 @@ class _WebViewDialogState extends State<WebViewDialog> {
       },
       onLoadStop: (controller, url) async {
         setState(() => isLoading = false);
-        
+
         // Inject JavaScript to detect verification completion
         await controller.evaluateJavascript(source: """
           (function() {
             var checkInterval = setInterval(function() {
               var bodyText = document.body.innerText || document.body.textContent;
-              if (bodyText.includes('Verification Complete') || 
+              if (bodyText.includes('Verification Complete') ||
                   bodyText.includes('verification complete')) {
                 window.flutter_inappwebview.callHandler('verificationComplete');
                 clearInterval(checkInterval);
@@ -245,13 +212,13 @@ class _WebViewDialogState extends State<WebViewDialog> {
       },
       shouldOverrideUrlLoading: (controller, navigationAction) async {
         final url = navigationAction.request.url;
-        
+
         // Check if URL is allowed
         if (url != null && !_isUrlAllowed(url.toString())) {
           _showBlockedUrlDialog(url.toString());
           return NavigationActionPolicy.CANCEL;
         }
-        
+
         return NavigationActionPolicy.ALLOW;
       },
     );

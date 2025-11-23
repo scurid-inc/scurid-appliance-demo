@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+
 
 class SuccessPage extends StatefulWidget {
   final String email;
@@ -17,7 +17,7 @@ class SuccessPage extends StatefulWidget {
 
 class _SuccessPageState extends State<SuccessPage> {
   InAppWebViewController? inAppWebViewController;
-  WebViewController? webViewController;
+
   bool isLoading = true;
   double progress = 0;
 
@@ -64,37 +64,14 @@ class _SuccessPageState extends State<SuccessPage> {
           if (isLoading)
             LinearProgressIndicator(value: progress == 0 ? null : progress),
           Expanded(
-            child: !kIsWeb && defaultTargetPlatform == TargetPlatform.linux
-                ? _buildLinuxWebView(grafanaUrl)
-                : _buildInAppWebView(grafanaUrl),
+            child: _buildInAppWebView(grafanaUrl),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLinuxWebView(String url) {
-    return WebView(
-      initialUrl: url,
-      javascriptMode: JavascriptMode.unrestricted,
-      onWebViewCreated: (WebViewController controller) {
-        webViewController = controller;
-      },
-      onProgress: (int progressValue) {
-        final progressDouble = progressValue / 100.0;
-        setState(() {
-          progress = progressDouble;
-          isLoading = progressDouble < 1.0;
-        });
-      },
-      onPageStarted: (String url) {
-        setState(() => isLoading = true);
-      },
-      onPageFinished: (String url) {
-        setState(() => isLoading = false);
-      },
-    );
-  }
+
 
   Widget _buildInAppWebView(String url) {
     final settings = InAppWebViewSettings(

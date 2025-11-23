@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter_linux_webview/flutter_linux_webview.dart';
+
 import 'package:window_manager/window_manager.dart';
 import 'pages/home_page.dart';
 
@@ -27,15 +26,7 @@ Future<void> main() async {
       await windowManager.focus();
     });
   }
-  // Initialize Linux WebView
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.linux) {
-    LinuxWebViewPlugin.initialize(options: <String, String?>{
-      'user-agent': 'ScuridApplianceDemo/1.0 (Linux)',
-      'remote-debugging-port': '8888',
-      'autoplay-policy': 'no-user-gesture-required',
-    });
-    WebView.platform = LinuxWebView();
-  }
+
 
   runApp(const ScuridApplianceDemo());
 }
