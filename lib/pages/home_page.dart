@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:collection';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../models/user.dart';
 import '../services/edge_agent_service.dart';
 import '../widgets/user_card.dart';
@@ -18,10 +22,18 @@ class _HomePageState extends State<HomePage> {
   bool _isLoading = true;
   String? _error;
 
+  // Webview controllers
+  InAppWebViewController? _inAppWebViewController;
+  final GlobalKey _inAppWebViewKey = GlobalKey();
+  WebViewController? _webViewController;
+  final GlobalKey _linuxWebViewKey = GlobalKey(); // Added key
+  bool _isWebViewLoading = true;
+  double _webViewProgress = 0;
+
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    // _loadUsers();
   }
 
   String _parseErrorMessage(dynamic error) {
@@ -256,6 +268,23 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Google Webview Test')),
+      body: Column(
+        children: [
+          if (_isWebViewLoading)
+            LinearProgressIndicator(
+              value: _webViewProgress == 0 ? null : _webViewProgress,
+            ),
+          Expanded(
+            child: !kIsWeb && defaultTargetPlatform == TargetPlatform.linux
+                ? _buildLinuxWebView()
+                : _buildInAppWebView(),
+          ),
+        ],
+      ),
+    );
+    /*
+    return Scaffold(
       appBar: AppBar(
         title: Text(
           'SCURID APPLIANCE',
@@ -352,7 +381,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton.icon(
-                        onPressed: _loadUsers,
+                      onPressed: _loadUsers,
                         icon: Icon(Icons.refresh),
                         label: const Text('Refresh'),
                       ),
@@ -376,6 +405,65 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+    */
+  }
+
+  Widget _buildLinuxWebView() {
+    return WebView(
+      key: _linuxWebViewKey,
+      initialUrl: 'https://google.com',
+      javascriptMode: JavascriptMode.unrestricted,
+      onWebViewCreated: (WebViewController controller) {
+        _webViewController = controller;
+      },
+      onProgress: (int progressValue) {
+        final progressDouble = progressValue / 100.0;
+              setState(() {
+                _webViewProgress = progressDouble;
+                _isWebViewLoading = progressDouble < 1.0;
+              });
+            },
+            onPageStarted: (String url) {
+              setState(() => _isWebViewLoading = true);
+            },
+            onPageFinished: (String url) {
+              setState(() => _isWebViewLoading = false);
+            },
+    );
+  }
+
+  Widget _buildInAppWebView() {
+    final settings = InAppWebViewSettings(
+      isInspectable: kDebugMode,
+      mediaPlaybackRequiresUserGesture: false,
+      allowsInlineMediaPlayback: true,
+      iframeAllowFullscreen: true,
+      javaScriptEnabled: true,
+      javaScriptCanOpenWindowsAutomatically: true,
+      supportZoom: true,
+    );
+
+    return InAppWebView(
+      key: _inAppWebViewKey,
+      initialUrlRequest: URLRequest(url: WebUri('https://google.com')),
+      initialSettings: settings,
+      onWebViewCreated: (controller) {
+        _inAppWebViewController = controller;
+      },
+      onLoadStart: (controller, url) {
+        setState(() => _isWebViewLoading = true);
+      },
+      onLoadStop: (controller, url) async {
+        setState(() => _isWebViewLoading = false);
+      },
+      onProgressChanged: (controller, progressValue) {
+        final progressDouble = progressValue / 100.0;
+        setState(() {
+          _webViewProgress = progressDouble;
+          _isWebViewLoading = progressDouble < 1.0;
+        });
+      },
     );
   }
 }

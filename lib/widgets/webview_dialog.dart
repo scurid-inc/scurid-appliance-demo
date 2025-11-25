@@ -2,7 +2,6 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewDialog extends StatefulWidget {
   final String url;
@@ -19,12 +18,9 @@ class WebViewDialog extends StatefulWidget {
 }
 
 class _WebViewDialogState extends State<WebViewDialog> {
-  // For InAppWebView (macOS)
+  // For InAppWebView (all platforms)
   InAppWebViewController? inAppWebViewController;
   final GlobalKey inAppWebViewKey = GlobalKey();
-
-  // For webview_flutter (Linux)
-  WebViewController? webViewController;
 
   bool isLoading = true;
   double progress = 0;
@@ -36,9 +32,8 @@ class _WebViewDialogState extends State<WebViewDialog> {
 
   @override
   void dispose() {
-    // Clean up controllers
+    // Clean up controller
     inAppWebViewController = null;
-    webViewController = null;
     super.dispose();
   }
 
@@ -142,45 +137,12 @@ class _WebViewDialogState extends State<WebViewDialog> {
                   bottomLeft: Radius.circular(16),
                   bottomRight: Radius.circular(16),
                 ),
-                child: !kIsWeb && defaultTargetPlatform == TargetPlatform.linux
-                    ? _buildLinuxWebView()
-                    : _buildInAppWebView(),
+                child: _buildInAppWebView(),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildLinuxWebView() {
-    return WebView(
-      initialUrl: widget.url,
-      javascriptMode: JavascriptMode.unrestricted,
-      onWebViewCreated: (WebViewController controller) {
-        webViewController = controller;
-      },
-      onProgress: (int progressValue) {
-        final progressDouble = progressValue / 100.0;
-        setState(() {
-          progress = progressDouble;
-          isLoading = progressDouble < 1.0;
-        });
-      },
-      onPageStarted: (String url) {
-        setState(() => isLoading = true);
-      },
-      onPageFinished: (String url) {
-        setState(() => isLoading = false);
-      },
-      navigationDelegate: (NavigationRequest request) {
-        // Check if URL is allowed
-        if (!_isUrlAllowed(request.url)) {
-          _showBlockedUrlDialog(request.url);
-          return NavigationDecision.prevent;
-        }
-        return NavigationDecision.navigate;
-      },
     );
   }
 
@@ -194,12 +156,14 @@ class _WebViewDialogState extends State<WebViewDialog> {
       javaScriptCanOpenWindowsAutomatically: true,
       supportZoom: false,
       useOnDownloadStart: true,
-      userAgent: 'ScuridApplianceDemo/1.0 (macOS)',
+      userAgent: 'ScuridApplianceDemo/1.0 (${defaultTargetPlatform.name})',
       transparentBackground: false,
       disableVerticalScroll: false,
       disableHorizontalScroll: false,
-      allowsAirPlayForMediaPlayback: true,
-      allowsPictureInPictureMediaPlayback: true,
+      // Linux-specific optimizations
+      hardwareAcceleration: true,
+      useShouldOverrideUrlLoading: true,
+      clearCache: false,
     );
 
     return InAppWebView(
