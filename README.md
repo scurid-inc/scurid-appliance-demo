@@ -55,6 +55,38 @@ Production mode:
 npm start
 ```
 
+## Building for Production
+
+### Local Build
+
+Build the TypeScript source:
+```bash
+npm run build
+```
+
+Create distributable packages (AppImage and .deb):
+```bash
+npm run dist
+```
+
+The built packages will be available in the `release/` directory:
+- `Scurid Appliance Demo-1.0.0.AppImage` - Portable application image
+- `scurid-appliance-demo_1.0.0_amd64.deb` - Debian package
+
+### Docker Build
+
+Build using Docker for a clean, reproducible build environment:
+
+```bash
+# Build the Docker image
+docker build -t scurid-appliance-builder .
+
+# Run the build (output will be in ./release directory)
+docker run --rm -v "$(pwd)/release:/app/release" scurid-appliance-builder
+```
+
+The Docker build uses Node.js 18 on Debian Bullseye with all required Electron build dependencies pre-installed.
+
 ## gRPC APIs Used
 
 The app uses the following EdgeAgent APIs:
