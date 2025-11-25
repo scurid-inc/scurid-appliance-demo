@@ -33,15 +33,10 @@ The app follows the same architecture as the Flutter version:
 
 ## Installation
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Generate gRPC proto files:
-   ```bash
-   npm run proto:generate
-   ```
+Install dependencies:
+```bash
+npm install
+```
 
 ## Running the App
 
@@ -98,18 +93,27 @@ The app uses the following EdgeAgent APIs:
 ## Project Structure
 
 ```
-scurid-appliance-electron/
+scurid-appliance-demo/
 ├── src/
-│   ├── main.ts              # Electron main process
-│   ├── renderer.ts          # Renderer process logic
+│   ├── main.ts                    # Electron main process
+│   ├── renderer.ts                # Home page renderer logic
+│   ├── successRenderer.ts         # Success page renderer logic
 │   ├── services/
-│   │   └── edgeAgentService.ts  # gRPC service client
-│   ├── proto/               # Generated gRPC files
+│   │   └── edgeAgentService.ts    # gRPC service client
+│   ├── utils/
+│   │   └── logger.ts              # Logging utility
+│   ├── proto/                     # Pre-generated gRPC files
+│   │   ├── edgeagent_pb.js
+│   │   ├── edgeagent_grpc_pb.js
+│   │   └── *.d.ts                 # TypeScript definitions
 │   └── pages/
-│       ├── index.html       # Home page
-│       └── success.html     # Success page
+│       ├── index.html             # Home page
+│       └── success.html           # Success page with Grafana dashboard
+├── dist/                          # Compiled JavaScript output
+├── release/                       # Built packages (AppImage, .deb)
 ├── package.json
 ├── tsconfig.json
+├── Dockerfile
 └── README.md
 ```
 
