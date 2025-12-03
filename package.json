@@ -1,0 +1,62 @@
+{
+  "name": "scurid-appliance-demo",
+  "version": "1.0.0",
+  "description": "Electron + TypeScript demo application for Scurid Appliance",
+  "main": "dist/main.js",
+  "author": {
+    "name": "Scurid",
+    "email": "info@scurid.com"
+  },
+  "homepage": "https://scurid.com",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "npm run build && electron .",
+    "dev": "concurrently \"npm run watch\" \"wait-on dist/main.js && electron .\"",
+    "postbuild": "rm -rf dist/pages dist/proto && mkdir -p dist && cp -r src/pages dist/pages || true && cp -r src/proto dist/proto || true",
+    "proto:generate": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/proto --grpc_out=grpc_js:./src/proto --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ../edgeagentapis/pkg/grpc/proto ../edgeagentapis/pkg/grpc/proto/edgeagent.proto && grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./src/proto -I ../edgeagentapis/pkg/grpc/proto ../edgeagentapis/pkg/grpc/proto/edgeagent.proto",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
+  },
+  "keywords": [
+    "electron",
+    "scurid",
+    "grpc",
+    "typescript"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^26.0.12",
+    "grpc_tools_node_protoc_ts": "^5.3.3",
+    "grpc-tools": "^1.12.4",
+    "typescript": "^5.3.3",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.9.14",
+    "@grpc/proto-loader": "^0.7.10",
+    "google-protobuf": "^3.21.2"
+  },
+  "build": {
+    "appId": "com.scurid.appliance.demo",
+    "productName": "Scurid Appliance Demo",
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    }
+  }
+}
