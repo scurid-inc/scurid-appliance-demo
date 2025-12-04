@@ -1567,9 +1567,7 @@ proto.edgeagentapis.v1.BiometricAuthReq.prototype.toObject = function(opt_includ
  */
 proto.edgeagentapis.v1.BiometricAuthReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    email: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    agentdid: jspb.Message.getFieldWithDefault(msg, 3, "")
+    id: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -1610,14 +1608,6 @@ proto.edgeagentapis.v1.BiometricAuthReq.deserializeBinaryFromReader = function(m
       var value = /** @type {string} */ (reader.readString());
       msg.setId(value);
       break;
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setEmail(value);
-      break;
-    case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setAgentdid(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -1654,20 +1644,6 @@ proto.edgeagentapis.v1.BiometricAuthReq.serializeBinaryToWriter = function(messa
       f
     );
   }
-  f = message.getEmail();
-  if (f.length > 0) {
-    writer.writeString(
-      2,
-      f
-    );
-  }
-  f = message.getAgentdid();
-  if (f.length > 0) {
-    writer.writeString(
-      3,
-      f
-    );
-  }
 };
 
 
@@ -1686,42 +1662,6 @@ proto.edgeagentapis.v1.BiometricAuthReq.prototype.getId = function() {
  */
 proto.edgeagentapis.v1.BiometricAuthReq.prototype.setId = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string email = 2;
- * @return {string}
- */
-proto.edgeagentapis.v1.BiometricAuthReq.prototype.getEmail = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.edgeagentapis.v1.BiometricAuthReq} returns this
- */
-proto.edgeagentapis.v1.BiometricAuthReq.prototype.setEmail = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string agentDID = 3;
- * @return {string}
- */
-proto.edgeagentapis.v1.BiometricAuthReq.prototype.getAgentdid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.edgeagentapis.v1.BiometricAuthReq} returns this
- */
-proto.edgeagentapis.v1.BiometricAuthReq.prototype.setAgentdid = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -7969,8 +7909,7 @@ proto.edgeagentapis.v1.IsAuthorisedReq.prototype.toObject = function(opt_include
  */
 proto.edgeagentapis.v1.IsAuthorisedReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    sessionid: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    verificationurl: jspb.Message.getFieldWithDefault(msg, 2, "")
+    sessionid: jspb.Message.getFieldWithDefault(msg, 1, "")
   };
 
   if (includeInstance) {
@@ -8011,10 +7950,6 @@ proto.edgeagentapis.v1.IsAuthorisedReq.deserializeBinaryFromReader = function(ms
       var value = /** @type {string} */ (reader.readString());
       msg.setSessionid(value);
       break;
-    case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setVerificationurl(value);
-      break;
     default:
       reader.skipField();
       break;
@@ -8051,13 +7986,6 @@ proto.edgeagentapis.v1.IsAuthorisedReq.serializeBinaryToWriter = function(messag
       f
     );
   }
-  f = message.getVerificationurl();
-  if (f.length > 0) {
-    writer.writeString(
-      2,
-      f
-    );
-  }
 };
 
 
@@ -8076,24 +8004,6 @@ proto.edgeagentapis.v1.IsAuthorisedReq.prototype.getSessionid = function() {
  */
 proto.edgeagentapis.v1.IsAuthorisedReq.prototype.setSessionid = function(value) {
   return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string verificationURL = 2;
- * @return {string}
- */
-proto.edgeagentapis.v1.IsAuthorisedReq.prototype.getVerificationurl = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.edgeagentapis.v1.IsAuthorisedReq} returns this
- */
-proto.edgeagentapis.v1.IsAuthorisedReq.prototype.setVerificationurl = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 

@@ -88,10 +88,6 @@ export namespace Empty {
 export class BiometricAuthReq extends jspb.Message { 
     getId(): string;
     setId(value: string): BiometricAuthReq;
-    getEmail(): string;
-    setEmail(value: string): BiometricAuthReq;
-    getAgentdid(): string;
-    setAgentdid(value: string): BiometricAuthReq;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): BiometricAuthReq.AsObject;
@@ -106,8 +102,6 @@ export class BiometricAuthReq extends jspb.Message {
 export namespace BiometricAuthReq {
     export type AsObject = {
         id: string,
-        email: string,
-        agentdid: string,
     }
 }
 
@@ -1026,8 +1020,6 @@ export namespace AES128Key {
 export class IsAuthorisedReq extends jspb.Message { 
     getSessionid(): string;
     setSessionid(value: string): IsAuthorisedReq;
-    getVerificationurl(): string;
-    setVerificationurl(value: string): IsAuthorisedReq;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): IsAuthorisedReq.AsObject;
@@ -1042,7 +1034,6 @@ export class IsAuthorisedReq extends jspb.Message {
 export namespace IsAuthorisedReq {
     export type AsObject = {
         sessionid: string,
-        verificationurl: string,
     }
 }
 
