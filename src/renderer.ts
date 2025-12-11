@@ -15,6 +15,16 @@ class Renderer {
     logger.info('Renderer: init - loading users');
     // Load users on startup
     this.loadUsers();
+
+    setTimeout(() => {
+      logger.info('Renderer: init - test modal display');
+      this.showModal('This is a test loading modal...');
+    }, 1000);
+
+    setTimeout(() => {
+      logger.info('Renderer: init - test GTK alert');
+      alert('This a generic GTK alert.');
+    }, 4000);
   }
 
   async loadUsers(): Promise<void> {
@@ -236,9 +246,74 @@ class Renderer {
   }
 
   private showAlert(title: string, message: string): void {
-    // Simple alert for now - could be enhanced with a custom modal
     logger.info(`Renderer: showAlert -> ${title}: ${message}`);
-    alert(`${title}\n\n${message}`);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'alert-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    `;
+
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+      background: white;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.25);
+      max-width: 28rem;
+      min-width: 20rem;
+    `;
+
+    const titleEl = document.createElement('h2');
+    titleEl.textContent = title;
+    titleEl.style.cssText = `
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.75rem;
+      color: #333;
+    `;
+
+    const messageEl = document.createElement('p');
+    messageEl.textContent = message;
+    messageEl.style.cssText = `
+      font-size: 1rem;
+      color: #444;
+      margin-bottom: 2rem;
+      white-space: pre-line;
+      line-height: 1.5;
+    `;
+
+    const button = document.createElement('button');
+    button.textContent = 'Ok';
+    button.style.cssText = `
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.75;
+      font-weight: 600;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    `;
+
+    button.addEventListener('click', () => {
+      overlay.remove();
+    });
+
+    dialog.appendChild(titleEl);
+    dialog.appendChild(messageEl);
+    dialog.appendChild(button);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
   }
 
   private navigateToSuccess(email: string): void {
