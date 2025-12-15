@@ -15,16 +15,6 @@ class Renderer {
     logger.info('Renderer: init - loading users');
     // Load users on startup
     this.loadUsers();
-
-    setTimeout(() => {
-      logger.info('Renderer: init - test modal display');
-      this.showModal('This is a test loading modal...');
-    }, 1000);
-
-    setTimeout(() => {
-      logger.info('Renderer: init - test GTK alert');
-      alert('This a generic GTK alert.');
-    }, 4000);
   }
 
   async loadUsers(): Promise<void> {
@@ -130,6 +120,14 @@ class Renderer {
 
   private async handleUserClick(user: DeviceUser): Promise<void> {
     this.currentUser = user;
+
+    // Check if SKIP_AUTH flag is set - skip biometric auth and go directly to dashboard
+    const skipAuth = process.env.SKIP_AUTH === 'true';
+    if (skipAuth) {
+      logger.info(`Renderer: handleUserClick - SKIP_AUTH enabled, skipping biometric auth for ${user.email}`);
+      this.navigateToSuccess(user.email);
+      return;
+    }
 
     try {
       logger.info(`Renderer: handleUserClick - initiating biometric auth for session ${user.sessionId}`);

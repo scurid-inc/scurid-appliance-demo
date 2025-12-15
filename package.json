@@ -12,11 +12,15 @@
     "build": "tsc",
     "watch": "tsc -w",
     "start": "npm run build && electron .",
+    "start:skip-auth": "npm run build && SKIP_AUTH=true electron .",
     "dev": "concurrently \"npm run watch\" \"wait-on dist/main.js && electron .\"",
+    "dev:skip-auth": "concurrently \"npm run watch\" \"wait-on dist/main.js && SKIP_AUTH=true electron .\"",
     "postbuild": "rm -rf dist/pages dist/proto && mkdir -p dist && cp -r src/pages dist/pages || true && cp -r src/proto dist/proto || true",
     "proto:generate": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/proto --grpc_out=grpc_js:./src/proto --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ../edgeagentapis/pkg/grpc/proto ../edgeagentapis/pkg/grpc/proto/edgeagent.proto && grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./src/proto -I ../edgeagentapis/pkg/grpc/proto ../edgeagentapis/pkg/grpc/proto/edgeagent.proto",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "pack:skip-auth": "npm run build && SKIP_AUTH=true electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:skip-auth": "npm run build && SKIP_AUTH=true electron-builder"
   },
   "keywords": [
     "electron",
